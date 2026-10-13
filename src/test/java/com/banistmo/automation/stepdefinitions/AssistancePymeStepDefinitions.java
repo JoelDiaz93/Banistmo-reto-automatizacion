@@ -88,18 +88,17 @@ public class AssistancePymeStepDefinitions {
     @Entonces("debe visualizar el buscador emergente de sucursales correcto")
     public void validateBranchFinder() {
         OnStage.theActorInTheSpotlight().attemptsTo(
-                WaitUntil.the(BranchFinder.HEADING, isVisible()).forNoMoreThan(15).seconds(),
-                WaitUntil.the(BranchFinder.POINT_TYPE, isVisible()).forNoMoreThan(15).seconds(),
-                WaitUntil.the(BranchFinder.PROVINCE, isVisible()).forNoMoreThan(15).seconds()
+                WaitUntil.the(BranchFinder.HEADING, isVisible()).forNoMoreThan(15).seconds()
         );
 
+        // At this point we validate page identity, not viewport position. The
+        // filter controls are lower in the page and SearchBranch is responsible
+        // for scrolling to them and selecting their values.
         OnStage.theActorInTheSpotlight().should(
                 seeThat("el título del buscador corresponde al esperado",
                         IsVisible.the(BranchFinder.HEADING), is(true)),
-                seeThat("el selector de tipo de punto está disponible",
-                        IsVisible.the(BranchFinder.POINT_TYPE), is(true)),
-                seeThat("el selector de provincia está disponible",
-                        IsVisible.the(BranchFinder.PROVINCE), is(true))
+                seeThat("la URL corresponde al buscador de sucursales",
+                        CurrentUrl.value(), containsString("buscador-sucursales"))
         );
     }
 

@@ -1,10 +1,12 @@
 package com.banistmo.automation.tasks;
 
+import com.banistmo.automation.interactions.DismissBlockingOverlays;
+import com.banistmo.automation.interactions.SelectBranchFilterOption;
 import com.banistmo.automation.userinterfaces.BranchFinder;
 import net.serenitybdd.screenplay.Actor;
 import net.serenitybdd.screenplay.Task;
 import net.serenitybdd.screenplay.Tasks;
-import net.serenitybdd.screenplay.actions.SelectFromOptions;
+import net.serenitybdd.screenplay.actions.Scroll;
 import net.serenitybdd.screenplay.waits.WaitUntil;
 
 import static net.serenitybdd.screenplay.matchers.WebElementStateMatchers.isVisible;
@@ -26,10 +28,11 @@ public class SearchBranch implements Task {
     @Override
     public <T extends Actor> void performAs(T actor) {
         actor.attemptsTo(
-                WaitUntil.the(BranchFinder.POINT_TYPE, isVisible()).forNoMoreThan(10).seconds(),
-                SelectFromOptions.byVisibleText(pointType).from(BranchFinder.POINT_TYPE),
-                WaitUntil.the(BranchFinder.PROVINCE, isVisible()).forNoMoreThan(10).seconds(),
-                SelectFromOptions.byVisibleText(province).from(BranchFinder.PROVINCE)
+                DismissBlockingOverlays.ifPresent(),
+                WaitUntil.the(BranchFinder.HEADING, isVisible()).forNoMoreThan(15).seconds(),
+                Scroll.to(BranchFinder.HEADING),
+                SelectBranchFilterOption.pointType(pointType),
+                SelectBranchFilterOption.province(province)
         );
     }
 }

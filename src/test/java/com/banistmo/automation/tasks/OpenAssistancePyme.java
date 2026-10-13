@@ -1,5 +1,6 @@
 package com.banistmo.automation.tasks;
 
+import com.banistmo.automation.interactions.DismissBlockingOverlays;
 import com.banistmo.automation.userinterfaces.PymesPage;
 import net.serenitybdd.screenplay.Actor;
 import net.serenitybdd.screenplay.Task;
@@ -20,6 +21,7 @@ public class OpenAssistancePyme implements Task {
     @Override
     public <T extends Actor> void performAs(T actor) {
         actor.attemptsTo(
+                DismissBlockingOverlays.ifPresent(),
                 WaitUntil.the(PymesPage.ASISTENCIA_PYME, isClickable()).forNoMoreThan(10).seconds(),
                 Scroll.to(PymesPage.ASISTENCIA_PYME),
                 Click.on(PymesPage.ASISTENCIA_PYME),

@@ -1,6 +1,7 @@
 package com.banistmo.automation.tasks;
 
 import com.banistmo.automation.config.ChallengeConfig;
+import com.banistmo.automation.interactions.DismissBlockingOverlays;
 import net.serenitybdd.screenplay.Actor;
 import net.serenitybdd.screenplay.Task;
 import net.serenitybdd.screenplay.Tasks;
@@ -14,6 +15,9 @@ public class OpenBanistmo implements Task {
 
     @Override
     public <T extends Actor> void performAs(T actor) {
-        actor.attemptsTo(Open.url(ChallengeConfig.personasUrl()));
+        actor.attemptsTo(
+                Open.url(ChallengeConfig.personasUrl()),
+                DismissBlockingOverlays.afterPageLoad()
+        );
     }
 }

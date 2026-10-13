@@ -1,5 +1,6 @@
 package com.banistmo.automation.tasks;
 
+import com.banistmo.automation.interactions.DismissBlockingOverlays;
 import com.banistmo.automation.interactions.FocusOnBranchFinder;
 import com.banistmo.automation.userinterfaces.PymesPage;
 import net.serenitybdd.screenplay.Actor;
@@ -26,6 +27,7 @@ public class OpenBranchFinder implements Task {
         Set<String> windowsBefore = new HashSet<>(BrowseTheWeb.as(actor).getDriver().getWindowHandles());
 
         actor.attemptsTo(
+                DismissBlockingOverlays.ifPresent(),
                 Scroll.to(PymesPage.SOLICITALO_CON_EJECUTIVO),
                 WaitUntil.the(PymesPage.SOLICITALO_CON_EJECUTIVO, isClickable()).forNoMoreThan(10).seconds(),
                 Click.on(PymesPage.SOLICITALO_CON_EJECUTIVO),

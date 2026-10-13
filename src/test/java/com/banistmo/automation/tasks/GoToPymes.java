@@ -1,6 +1,6 @@
 package com.banistmo.automation.tasks;
 
-import com.banistmo.automation.interactions.DismissPrivacyNotice;
+import com.banistmo.automation.interactions.DismissBlockingOverlays;
 import com.banistmo.automation.userinterfaces.BanistmoHomePage;
 import net.serenitybdd.screenplay.Actor;
 import net.serenitybdd.screenplay.Task;
@@ -19,8 +19,8 @@ public class GoToPymes implements Task {
     @Override
     public <T extends Actor> void performAs(T actor) {
         actor.attemptsTo(
-                DismissPrivacyNotice.ifPresent(),
-                WaitUntil.the(BanistmoHomePage.PYMES, isClickable()).forNoMoreThan(10).seconds(),
+                DismissBlockingOverlays.ifPresent(),
+                WaitUntil.the(BanistmoHomePage.PYMES, isClickable()).forNoMoreThan(12).seconds(),
                 Click.on(BanistmoHomePage.PYMES)
         );
     }

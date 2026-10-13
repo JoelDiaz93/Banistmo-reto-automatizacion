@@ -87,6 +87,12 @@ public class AssistancePymeStepDefinitions {
 
     @Entonces("debe visualizar el buscador emergente de sucursales correcto")
     public void validateBranchFinder() {
+        OnStage.theActorInTheSpotlight().attemptsTo(
+                WaitUntil.the(BranchFinder.HEADING, isVisible()).forNoMoreThan(15).seconds(),
+                WaitUntil.the(BranchFinder.POINT_TYPE, isVisible()).forNoMoreThan(15).seconds(),
+                WaitUntil.the(BranchFinder.PROVINCE, isVisible()).forNoMoreThan(15).seconds()
+        );
+
         OnStage.theActorInTheSpotlight().should(
                 seeThat("el título del buscador corresponde al esperado",
                         IsVisible.the(BranchFinder.HEADING), is(true)),

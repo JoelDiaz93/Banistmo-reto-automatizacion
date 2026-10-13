@@ -22,9 +22,9 @@ public class OpenBranchFinder implements Task {
     public <T extends Actor> void performAs(T actor) {
         actor.attemptsTo(
                 DismissBlockingOverlays.ifPresent(),
-                WaitUntil.the(PymesPage.SOLICITALO_CON_EJECUTIVO, isVisible()).forNoMoreThan(10).seconds(),
+                WaitUntil.the(PymesPage.SOLICITALO_CON_EJECUTIVO, isVisible()).forNoMoreThan(8).seconds(),
                 Scroll.to(PymesPage.SOLICITALO_CON_EJECUTIVO),
-                WaitUntil.the(PymesPage.SOLICITALO_CON_EJECUTIVO, isClickable()).forNoMoreThan(10).seconds(),
+                WaitUntil.the(PymesPage.SOLICITALO_CON_EJECUTIVO, isClickable()).forNoMoreThan(8).seconds(),
                 ActivateExecutivePymeCta.andWaitForBranchFinder()
         );
     }

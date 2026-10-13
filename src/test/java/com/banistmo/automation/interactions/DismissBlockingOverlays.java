@@ -1,27 +1,30 @@
 package com.banistmo.automation.interactions;
 
 import com.banistmo.automation.userinterfaces.BanistmoHomePage;
+import net.serenitybdd.annotations.Step;
 import net.serenitybdd.screenplay.Actor;
 import net.serenitybdd.screenplay.Interaction;
-import net.serenitybdd.screenplay.actions.Click;
 import net.serenitybdd.screenplay.abilities.BrowseTheWeb;
+import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
+import java.util.List;
 
 /**
- * Closes only known, non-functional overlays that can interrupt the navigation
- * required by the challenge. Functional dialogs (for example the branch
- * finder opened by the challenge) are deliberately not handled here.
+ * Closes only known, non-functional overlays that can interrupt the challenge.
+ * Optional overlays are detected with immediate WebDriver lookups so their
+ * absence never consumes Serenity's global fluent wait.
  */
 public class DismissBlockingOverlays implements Interaction {
 
-    private static final Duration LATE_PROMO_WAIT = Duration.ofSeconds(4);
-    private static final Duration DISMISS_WAIT = Duration.ofSeconds(3);
+    private static final Duration LATE_PROMO_WAIT = Duration.ofMillis(1800);
+    private static final Duration DISMISS_WAIT = Duration.ofMillis(1500);
 
     private final boolean waitForLatePromotionalModal;
 
@@ -29,83 +32,91 @@ public class DismissBlockingOverlays implements Interaction {
         this.waitForLatePromotionalModal = waitForLatePromotionalModal;
     }
 
-    /**
-     * Use immediately after loading the Personas home page. The promotional
-     * campaign modal is injected asynchronously, so we give it a short,
-     * bounded opportunity to appear before continuing.
-     */
     public static DismissBlockingOverlays afterPageLoad() {
         return new DismissBlockingOverlays(true);
     }
 
-    /**
-     * Use before subsequent navigation actions. It does not add an artificial
-     * wait when no known overlay is currently visible.
-     */
     public static DismissBlockingOverlays ifPresent() {
         return new DismissBlockingOverlays(false);
     }
 
     @Override
+    @Step("{0} descarta avisos no funcionales si bloquean la navegación")
     public <T extends Actor> void performAs(T actor) {
         WebDriver driver = BrowseTheWeb.as(actor).getDriver();
 
+        // The privacy banner is commonly present immediately and can intercept
+        // the first navigation click, so it has priority.
+        dismissPrivacyNotice(driver);
+
         if (waitForLatePromotionalModal) {
-            waitForPromotionalModalToAppear(actor, driver);
+            waitBrieflyForPromotionalModal(driver);
         }
 
-        dismissPromotionalModal(actor, driver);
-        dismissPrivacyNotice(actor, driver);
+        dismissPromotionalModal(driver);
+
+        // The privacy banner may be injected after the campaign/modal cycle.
+        dismissPrivacyNotice(driver);
     }
 
-    private <T extends Actor> void waitForPromotionalModalToAppear(T actor, WebDriver driver) {
+    private void waitBrieflyForPromotionalModal(WebDriver driver) {
         try {
             new WebDriverWait(driver, LATE_PROMO_WAIT).until(ignored ->
-                    BanistmoHomePage.PROMOTIONAL_MODAL_HEADING.resolveFor(actor).isVisible()
+                    visibleNow(driver, BanistmoHomePage.PROMOTIONAL_MODAL_HEADING_BY) != null
             );
         } catch (TimeoutException ignored) {
-            // The campaign is optional and may be disabled by Banistmo at any time.
+            // Optional campaign: absence is a normal state.
         }
     }
 
-    private <T extends Actor> void dismissPromotionalModal(T actor, WebDriver driver) {
-        if (!BanistmoHomePage.PROMOTIONAL_MODAL_HEADING.resolveFor(actor).isVisible()) {
+    private void dismissPromotionalModal(WebDriver driver) {
+        WebElement modalHeading = visibleNow(driver, BanistmoHomePage.PROMOTIONAL_MODAL_HEADING_BY);
+        if (modalHeading == null) {
             return;
         }
 
-        if (BanistmoHomePage.PROMOTIONAL_MODAL_CLOSE.resolveFor(actor).isVisible()) {
-            actor.attemptsTo(Click.on(BanistmoHomePage.PROMOTIONAL_MODAL_CLOSE));
+        WebElement close = visibleNow(driver, BanistmoHomePage.PROMOTIONAL_MODAL_CLOSE_BY);
+        if (close != null) {
+            close.click();
         } else {
-            // Accessible modal implementations normally support Escape. This is
-            // a fallback only for the known MultiPuntos campaign identified by
-            // its heading; we never press Escape for an unknown dialog.
             new Actions(driver).sendKeys(Keys.ESCAPE).perform();
         }
 
-        waitUntilHidden(actor, driver, true);
+        waitUntilGone(driver, BanistmoHomePage.PROMOTIONAL_MODAL_HEADING_BY, "modal promocional de MultiPuntos");
     }
 
-    private <T extends Actor> void dismissPrivacyNotice(T actor, WebDriver driver) {
-        if (!BanistmoHomePage.PRIVACY_ACKNOWLEDGE.resolveFor(actor).isVisible()) {
+    private void dismissPrivacyNotice(WebDriver driver) {
+        WebElement acknowledge = visibleNow(driver, BanistmoHomePage.PRIVACY_ACKNOWLEDGE_BY);
+        if (acknowledge == null) {
             return;
         }
 
-        actor.attemptsTo(Click.on(BanistmoHomePage.PRIVACY_ACKNOWLEDGE));
-        waitUntilHidden(actor, driver, false);
+        acknowledge.click();
+        waitUntilGone(driver, BanistmoHomePage.PRIVACY_ACKNOWLEDGE_BY, "aviso de privacidad");
     }
 
-    private <T extends Actor> void waitUntilHidden(T actor, WebDriver driver, boolean promotionalModal) {
+    private void waitUntilGone(WebDriver driver, By locator, String overlayName) {
         try {
-            new WebDriverWait(driver, DISMISS_WAIT).until(ignored -> promotionalModal
-                    ? !BanistmoHomePage.PROMOTIONAL_MODAL_HEADING.resolveFor(actor).isVisible()
-                    : !BanistmoHomePage.PRIVACY_ACKNOWLEDGE.resolveFor(actor).isVisible()
-            );
+            new WebDriverWait(driver, DISMISS_WAIT).until(ignored -> visibleNow(driver, locator) == null);
         } catch (TimeoutException exception) {
-            String overlay = promotionalModal ? "modal promocional de MultiPuntos" : "aviso de privacidad";
             throw new IllegalStateException(
-                    "El " + overlay + " continúa visible y bloquea la navegación; no se continúa para evitar un falso positivo.",
+                    "El " + overlayName + " continúa visible y bloquea la navegación; se detiene para evitar un falso positivo.",
                     exception
             );
         }
+    }
+
+    private WebElement visibleNow(WebDriver driver, By locator) {
+        List<WebElement> matches = driver.findElements(locator);
+        for (WebElement element : matches) {
+            try {
+                if (element.isDisplayed() && element.isEnabled()) {
+                    return element;
+                }
+            } catch (RuntimeException ignored) {
+                // Dynamic element disappeared between lookup and inspection.
+            }
+        }
+        return null;
     }
 }

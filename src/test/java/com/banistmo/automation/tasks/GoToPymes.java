@@ -20,7 +20,7 @@ public class GoToPymes implements Task {
     public <T extends Actor> void performAs(T actor) {
         actor.attemptsTo(
                 DismissBlockingOverlays.ifPresent(),
-                WaitUntil.the(BanistmoHomePage.PYMES, isClickable()).forNoMoreThan(12).seconds(),
+                WaitUntil.the(BanistmoHomePage.PYMES, isClickable()).forNoMoreThan(8).seconds(),
                 Click.on(BanistmoHomePage.PYMES)
         );
     }

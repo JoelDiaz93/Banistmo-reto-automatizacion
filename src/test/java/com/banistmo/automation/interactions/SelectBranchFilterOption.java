@@ -32,8 +32,8 @@ import java.util.Set;
  */
 public class SelectBranchFilterOption implements Interaction {
 
-    private static final Duration CONTROL_TIMEOUT = Duration.ofSeconds(15);
-    private static final Duration OPTION_TIMEOUT = Duration.ofSeconds(10);
+    private static final Duration CONTROL_TIMEOUT = Duration.ofSeconds(8);
+    private static final Duration OPTION_TIMEOUT = Duration.ofSeconds(5);
 
     private final Filter filter;
     private final String option;

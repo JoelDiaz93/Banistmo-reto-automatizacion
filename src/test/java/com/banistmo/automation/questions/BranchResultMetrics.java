@@ -9,16 +9,27 @@ public final class BranchResultMetrics {
     private BranchResultMetrics() {
     }
 
-    public static int countForProvince(List<String> visibleResultTexts, String province) {
+    public static int countForProvince(List<BranchResult> visibleResults, String province) {
         String expectedPrefix = normalize(province) + " -";
 
-        return (int) visibleResultTexts.stream()
+        return (int) visibleResults.stream()
+                .map(BranchResult::address)
                 .map(BranchResultMetrics::normalize)
                 .filter(text -> text.startsWith(expectedPrefix))
                 .count();
     }
 
-    private static String normalize(String value) {
+    public static boolean containsBranch(List<BranchResult> visibleResults, String branchName, String province) {
+        String expectedBranch = normalize(branchName);
+        String expectedProvincePrefix = normalize(province) + " -";
+
+        return visibleResults.stream().anyMatch(result ->
+                normalize(result.name()).equals(expectedBranch)
+                        && normalize(result.address()).startsWith(expectedProvincePrefix)
+        );
+    }
+
+    static String normalize(String value) {
         if (value == null) {
             return "";
         }

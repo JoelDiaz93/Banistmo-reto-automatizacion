@@ -20,7 +20,7 @@ public class OpenProductsAndServices implements Task {
     public <T extends Actor> void performAs(T actor) {
         actor.attemptsTo(
                 DismissBlockingOverlays.ifPresent(),
-                WaitUntil.the(PymesPage.PRODUCTOS_Y_SERVICIOS, isClickable()).forNoMoreThan(12).seconds(),
+                WaitUntil.the(PymesPage.PRODUCTOS_Y_SERVICIOS, isClickable()).forNoMoreThan(8).seconds(),
                 Click.on(PymesPage.PRODUCTOS_Y_SERVICIOS)
         );
     }

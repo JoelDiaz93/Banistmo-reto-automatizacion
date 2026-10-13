@@ -1,5 +1,7 @@
 package com.banistmo.automation.stepdefinitions;
 
+import com.banistmo.automation.interactions.WaitForBranchResults;
+import com.banistmo.automation.questions.BranchIsListed;
 import com.banistmo.automation.questions.BranchResultsCount;
 import com.banistmo.automation.questions.CurrentUrl;
 import com.banistmo.automation.questions.IsVisible;
@@ -20,7 +22,6 @@ import net.serenitybdd.annotations.Managed;
 import net.serenitybdd.screenplay.abilities.BrowseTheWeb;
 import net.serenitybdd.screenplay.actors.OnStage;
 import net.serenitybdd.screenplay.actors.OnlineCast;
-import net.serenitybdd.screenplay.actions.Scroll;
 import net.serenitybdd.screenplay.waits.WaitUntil;
 import org.openqa.selenium.WebDriver;
 
@@ -90,12 +91,9 @@ public class AssistancePymeStepDefinitions {
     @Entonces("debe visualizar el buscador emergente de sucursales correcto")
     public void validateBranchFinder() {
         OnStage.theActorInTheSpotlight().attemptsTo(
-                WaitUntil.the(BranchFinder.HEADING, isVisible()).forNoMoreThan(15).seconds()
+                WaitUntil.the(BranchFinder.HEADING, isVisible()).forNoMoreThan(10).seconds()
         );
 
-        // At this point we validate page identity, not viewport position. The
-        // filter controls are lower in the page and SearchBranch is responsible
-        // for scrolling to them and selecting their values.
         OnStage.theActorInTheSpotlight().should(
                 seeThat("el título del buscador corresponde al esperado",
                         IsVisible.the(BranchFinder.HEADING), is(true)),
@@ -114,9 +112,7 @@ public class AssistancePymeStepDefinitions {
     @Entonces("debe visualizar {int} sucursales en la provincia {string}")
     public void validateBranchCount(int expectedCount, String province) {
         OnStage.theActorInTheSpotlight().attemptsTo(
-                WaitUntil.the(BranchFinder.branchAddressForProvince(province), isVisible())
-                        .forNoMoreThan(15).seconds(),
-                Scroll.to(BranchFinder.branchAddressForProvince(province))
+                WaitForBranchResults.count(expectedCount, province)
         );
 
         OnStage.theActorInTheSpotlight().should(
@@ -128,8 +124,8 @@ public class AssistancePymeStepDefinitions {
     @Entonces("debe visualizar la sucursal {string} asociada a {string}")
     public void validateBranch(String branchName, String province) {
         OnStage.theActorInTheSpotlight().should(
-                seeThat("la sucursal y su provincia aparecen en la misma tarjeta de resultado",
-                        IsVisible.the(BranchFinder.branchCard(branchName, province)), is(true))
+                seeThat("la sucursal y su provincia aparecen en el mismo resultado",
+                        BranchIsListed.named(branchName, province), is(true))
         );
     }
 }

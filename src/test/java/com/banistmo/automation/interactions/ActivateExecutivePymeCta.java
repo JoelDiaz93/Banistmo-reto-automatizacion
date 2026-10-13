@@ -28,7 +28,7 @@ import java.util.Set;
 public class ActivateExecutivePymeCta implements Interaction {
 
     private static final Duration NATIVE_CLICK_RESULT_WAIT = Duration.ofSeconds(5);
-    private static final Duration DOM_CLICK_RESULT_WAIT = Duration.ofSeconds(12);
+    private static final Duration DOM_CLICK_RESULT_WAIT = Duration.ofSeconds(8);
 
     public static ActivateExecutivePymeCta andWaitForBranchFinder() {
         return new ActivateExecutivePymeCta();

@@ -22,10 +22,10 @@ public class OpenAssistancePyme implements Task {
     public <T extends Actor> void performAs(T actor) {
         actor.attemptsTo(
                 DismissBlockingOverlays.ifPresent(),
-                WaitUntil.the(PymesPage.ASISTENCIA_PYME, isClickable()).forNoMoreThan(10).seconds(),
+                WaitUntil.the(PymesPage.ASISTENCIA_PYME, isClickable()).forNoMoreThan(8).seconds(),
                 Scroll.to(PymesPage.ASISTENCIA_PYME),
                 Click.on(PymesPage.ASISTENCIA_PYME),
-                WaitUntil.the(PymesPage.ASISTENCIA_HEADING, isVisible()).forNoMoreThan(12).seconds()
+                WaitUntil.the(PymesPage.ASISTENCIA_HEADING, isVisible()).forNoMoreThan(10).seconds()
         );
     }
 }

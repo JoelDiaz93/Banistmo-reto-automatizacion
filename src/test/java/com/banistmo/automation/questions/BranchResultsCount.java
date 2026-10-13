@@ -1,8 +1,9 @@
 package com.banistmo.automation.questions;
 
-import com.banistmo.automation.userinterfaces.BranchFinder;
 import net.serenitybdd.screenplay.Actor;
 import net.serenitybdd.screenplay.Question;
+import net.serenitybdd.screenplay.abilities.BrowseTheWeb;
+import org.openqa.selenium.WebDriver;
 
 import java.util.List;
 
@@ -20,14 +21,8 @@ public class BranchResultsCount implements Question<Integer> {
 
     @Override
     public Integer answeredBy(Actor actor) {
-        List<String> visibleAddressTexts = BranchFinder.RESULT_ADDRESS_LINES
-                .resolveAllFor(actor)
-                .stream()
-                .filter(element -> element.isVisible())
-                .map(element -> element.getText().trim())
-                .filter(text -> !text.isBlank())
-                .toList();
-
-        return BranchResultMetrics.countForProvince(visibleAddressTexts, province);
+        WebDriver driver = BrowseTheWeb.as(actor).getDriver();
+        List<BranchResult> visibleResults = BranchResultDom.visibleResults(driver);
+        return BranchResultMetrics.countForProvince(visibleResults, province);
     }
 }

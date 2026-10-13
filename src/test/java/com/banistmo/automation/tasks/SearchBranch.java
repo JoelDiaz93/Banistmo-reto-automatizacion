@@ -29,7 +29,7 @@ public class SearchBranch implements Task {
     public <T extends Actor> void performAs(T actor) {
         actor.attemptsTo(
                 DismissBlockingOverlays.ifPresent(),
-                WaitUntil.the(BranchFinder.HEADING, isVisible()).forNoMoreThan(15).seconds(),
+                WaitUntil.the(BranchFinder.HEADING, isVisible()).forNoMoreThan(10).seconds(),
                 Scroll.to(BranchFinder.HEADING),
                 SelectBranchFilterOption.pointType(pointType),
                 SelectBranchFilterOption.province(province)

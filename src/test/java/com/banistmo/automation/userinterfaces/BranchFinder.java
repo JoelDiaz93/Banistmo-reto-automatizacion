@@ -22,43 +22,6 @@ public final class BranchFinder {
                     "or contains(translate(normalize-space(.),'ABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚÜÑ','abcdefghijklmnopqrstuvwxyzáéíóúüñ'),'colon')]])[1]"
             ));
 
-    /**
-     * Visible leaf nodes that look like branch address rows (for example
-     * "Colón - Calle 13..."). Filtering by province is intentionally kept in
-     * the Question so the locator is independent from test data.
-     */
-    public static final Target RESULT_ADDRESS_LINES = Target.the("direcciones visibles de resultados de sucursales")
-            .located(By.xpath(
-                    "//*[contains(normalize-space(.),' - ') " +
-                    "and not(.//*[contains(normalize-space(.),' - ')])]"
-            ));
-
-    public static Target branchAddressForProvince(String province) {
-        String normalizedProvince = province == null ? "" : province.trim();
-        return Target.the("primera dirección visible de una sucursal en " + normalizedProvince)
-                .located(By.xpath(
-                        "(//*[contains(normalize-space(.),\"" + normalizedProvince + " -\") " +
-                        "and not(.//*[contains(normalize-space(.),\"" + normalizedProvince + " -\")])])[1]"
-                ));
-    }
-
-    public static Target branchNamed(String branchName) {
-        return Target.the("sucursal " + branchName)
-                .located(By.xpath(
-                        "(//*[self::h2 or self::h3 or self::h4 or self::strong or self::span or self::div]" +
-                        "[normalize-space()=\"" + branchName + "\"])[1]"
-                ));
-    }
-
-    public static Target branchCard(String branchName, String province) {
-        return Target.the("tarjeta de la sucursal " + branchName + " asociada a " + province)
-                .located(By.xpath(
-                        "(//*[normalize-space()=\"" + branchName + "\"]" +
-                        "/ancestor::*[self::button or self::li or self::article or self::div]" +
-                        "[contains(normalize-space(.),\"" + province + "\")][1])[1]"
-                ));
-    }
-
     private BranchFinder() {
     }
 }

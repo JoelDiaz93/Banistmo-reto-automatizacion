@@ -1,0 +1,45 @@
+name: Banistmo R010 Automation CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Bootstrap official Gradle Wrapper when missing
+        if: ${{ hashFiles('gradle/wrapper/gradle-wrapper.jar') == '' }}
+        run: bash scripts/setup-gradle-wrapper.sh
+
+      - name: Validate Gradle Wrapper
+        run: ./gradlew --version
+
+      - name: Execute E2E tests and aggregate Serenity report
+        run: ./gradlew clean test aggregate -Dheadless.mode=true --stacktrace
+
+      - name: Upload Serenity report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: serenity-report
+          path: target/site/serenity/
+          if-no-files-found: warn
+          retention-days: 14

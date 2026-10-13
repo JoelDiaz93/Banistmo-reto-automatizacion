@@ -1,0 +1,25 @@
+# Gradle
+.gradle/
+build/
+target/
+.gradle-bootstrap/
+
+# IDE
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs and local files
+*.log
+.env
+*.tmp
+
+# Test artifacts kept only when explicitly copied as evidence
+downloads/

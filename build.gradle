@@ -1,0 +1,79 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath "net.serenity-bdd:serenity-gradle-plugin:5.3.9"
+        classpath "net.serenity-bdd:serenity-single-page-report:5.3.9"
+    }
+}
+
+ext {
+    serenityVersion = '5.3.9'
+    cucumberVersion = '7.34.2'
+    junitVersion = '6.0.3'
+}
+
+defaultTasks 'clean', 'test', 'aggregate'
+
+repositories {
+    mavenCentral()
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+apply plugin: 'net.serenity-bdd.serenity-gradle-plugin'
+
+group = 'com.banistmo.automation'
+version = '1.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 17
+}
+
+dependencies {
+    testImplementation "net.serenity-bdd:serenity-core:${serenityVersion}"
+    testImplementation "net.serenity-bdd:serenity-cucumber:${serenityVersion}"
+    testImplementation "net.serenity-bdd:serenity-screenplay:${serenityVersion}"
+    testImplementation "net.serenity-bdd:serenity-screenplay-webdriver:${serenityVersion}"
+    testImplementation "net.serenity-bdd:serenity-ensure:${serenityVersion}"
+
+    testImplementation "io.cucumber:cucumber-java:${cucumberVersion}"
+    testImplementation "io.cucumber:cucumber-junit-platform-engine:${cucumberVersion}"
+
+    testImplementation "org.junit.platform:junit-platform-launcher:1.13.4"
+    testImplementation "org.junit.platform:junit-platform-suite:${junitVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+
+    testImplementation 'org.assertj:assertj-core:3.27.6'
+    testImplementation 'org.hamcrest:hamcrest:3.0'
+    testRuntimeOnly 'ch.qos.logback:logback-classic:1.5.20'
+}
+
+test {
+    useJUnitPlatform()
+    systemProperties System.getProperties()
+    systemProperty 'file.encoding', 'UTF-8'
+
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat 'full'
+        showStandardStreams = true
+    }
+}
+
+serenity {
+    reports = ['single-page-html']
+}
+
+gradle.startParameter.continueOnFailure = false
+
+test.finalizedBy(aggregate, reports)

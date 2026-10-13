@@ -5,12 +5,12 @@ buildscript {
     }
     dependencies {
         classpath "net.serenity-bdd:serenity-gradle-plugin:5.3.9"
-        classpath "net.serenity-bdd:serenity-single-page-report:5.3.9"
+        classpath "net.serenity-bdd:serenity-single-page-report:5.3.11"
     }
 }
 
 ext {
-    serenityVersion = '5.3.9'
+    serenityVersion = '5.3.11'
     cucumberVersion = '7.34.2'
     junitVersion = '6.0.3'
 }
@@ -49,23 +49,75 @@ dependencies {
     testImplementation "io.cucumber:cucumber-java:${cucumberVersion}"
     testImplementation "io.cucumber:cucumber-junit-platform-engine:${cucumberVersion}"
 
-    testImplementation "org.junit.platform:junit-platform-launcher:1.13.4"
-    testImplementation "org.junit.platform:junit-platform-suite:${junitVersion}"
-    testImplementation "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    // Keep the whole JUnit stack on one coherent version.
+    testImplementation platform("org.junit:junit-bom:${junitVersion}")
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.junit.platform:junit-platform-suite'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     testImplementation 'org.assertj:assertj-core:3.27.6'
     testImplementation 'org.hamcrest:hamcrest:3.0'
     testRuntimeOnly 'ch.qos.logback:logback-classic:1.5.20'
 }
 
+/**
+ * P0 static guardrails. These checks intentionally target high-risk anti-patterns
+ * for this challenge without introducing another quality framework dependency.
+ */
+tasks.register('p0StaticCheck') {
+    group = 'verification'
+    description = 'Validates mandatory R010 P0 source and repository guardrails.'
+
+    doLast {
+        def sourceViolations = []
+        def forbiddenPatterns = [
+                'Thread.sleep(' : 'Use condition-based synchronization instead of fixed sleeps.',
+                'webdriver.chrome.driver' : 'Use Selenium Manager instead of a machine-specific driver path.',
+                'Open.url("https://www.banistmo.com/personas/buscador-sucursales' : 'Direct branch-finder navigation is forbidden as a fallback.'
+        ]
+
+        fileTree('src/test/java/com/banistmo/automation') {
+            include '**/*.java'
+        }.files.each { source ->
+            def content = source.getText('UTF-8')
+            forbiddenPatterns.each { pattern, reason ->
+                if (content.contains(pattern)) {
+                    sourceViolations << "${source}: '${pattern}' - ${reason}"
+                }
+            }
+        }
+
+        if (!sourceViolations.isEmpty()) {
+            throw new GradleException('P0 source policy violations:\n - ' + sourceViolations.join('\n - '))
+        }
+
+        def sensitiveFiles = fileTree(projectDir) {
+            include '**/.env', '**/.env.*', '**/*.pem', '**/*.key', '**/*.p12', '**/*.pfx'
+            include '**/*credentials*.json', '**/*token*.json', '**/*cookies*.json'
+            exclude '.git/**', '**/.env.example'
+        }.files
+
+        if (!sensitiveFiles.isEmpty()) {
+            throw new GradleException('P0 security policy violation. Potential sensitive files found:\n - ' + sensitiveFiles.join('\n - '))
+        }
+    }
+}
+
 test {
     useJUnitPlatform()
+    dependsOn tasks.named('p0StaticCheck')
+
     systemProperties System.getProperties()
     systemProperty 'file.encoding', 'UTF-8'
+    jvmArgs = [
+            '-Dfile.encoding=UTF-8',
+            '-Dsun.stdout.encoding=UTF-8',
+            '-Dsun.stderr.encoding=UTF-8'
+    ]
 
     testLogging {
         events 'passed', 'skipped', 'failed'
-        exceptionFormat 'full'
+        exceptionFormat = 'full'
         showStandardStreams = true
     }
 }

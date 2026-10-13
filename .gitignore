@@ -1,4 +1,4 @@
-# Gradle
+# Gradle / test output
 .gradle/
 build/
 target/
@@ -18,8 +18,22 @@ Thumbs.db
 
 # Logs and local files
 *.log
-.env
 *.tmp
 
-# Test artifacts kept only when explicitly copied as evidence
+# Secrets / credentials / browser state
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*credentials*.json
+*token*.json
+*cookies*.json
+chrome-profile/
+browser-profile/
+
+# Runtime artifacts
 downloads/
+screenshots/

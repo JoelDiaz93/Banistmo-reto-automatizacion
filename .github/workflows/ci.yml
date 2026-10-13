@@ -10,10 +10,14 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: banistmo-r010-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
@@ -24,6 +28,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+          cache: gradle
 
       - name: Bootstrap official Gradle Wrapper when missing
         if: ${{ hashFiles('gradle/wrapper/gradle-wrapper.jar') == '' }}
@@ -32,8 +37,15 @@ jobs:
       - name: Validate Gradle Wrapper
         run: ./gradlew --version
 
+      - name: P0 static quality gate
+        run: ./gradlew p0StaticCheck
+
       - name: Execute E2E tests and aggregate Serenity report
-        run: ./gradlew clean test aggregate -Dheadless.mode=true --stacktrace
+        env:
+          LANG: C.UTF-8
+          LC_ALL: C.UTF-8
+          JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8
+        run: ./gradlew clean test aggregate -Dheadless.mode=true --warning-mode all --stacktrace
 
       - name: Upload Serenity report
         if: always()

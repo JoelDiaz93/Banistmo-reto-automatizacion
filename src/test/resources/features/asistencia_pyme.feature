@@ -13,4 +13,5 @@ Característica: Asistencia Pyme y búsqueda de sucursales
     Y selecciona Solicítalo con tu Ejecutivo Pyme
     Entonces debe visualizar el buscador emergente de sucursales correcto
     Cuando busca el tipo de punto "Sucursales" en la provincia "Colón"
-    Entonces debe visualizar la sucursal "Zona Libre" asociada a "Colón"
+    Entonces debe visualizar 2 sucursales en la provincia "Colón"
+    Y debe visualizar la sucursal "Zona Libre" asociada a "Colón"

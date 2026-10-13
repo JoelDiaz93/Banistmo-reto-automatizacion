@@ -1,5 +1,6 @@
 package com.banistmo.automation.stepdefinitions;
 
+import com.banistmo.automation.questions.BranchResultsCount;
 import com.banistmo.automation.questions.CurrentUrl;
 import com.banistmo.automation.questions.IsVisible;
 import com.banistmo.automation.tasks.GoToPymes;
@@ -19,6 +20,7 @@ import net.serenitybdd.annotations.Managed;
 import net.serenitybdd.screenplay.abilities.BrowseTheWeb;
 import net.serenitybdd.screenplay.actors.OnStage;
 import net.serenitybdd.screenplay.actors.OnlineCast;
+import net.serenitybdd.screenplay.actions.Scroll;
 import net.serenitybdd.screenplay.waits.WaitUntil;
 import org.openqa.selenium.WebDriver;
 
@@ -105,8 +107,21 @@ public class AssistancePymeStepDefinitions {
     @Cuando("busca el tipo de punto {string} en la provincia {string}")
     public void searchBranch(String pointType, String province) {
         OnStage.theActorInTheSpotlight().attemptsTo(
-                SearchBranch.using(pointType, province),
-                WaitUntil.the(BranchFinder.branchCard("Zona Libre", province), isVisible()).forNoMoreThan(15).seconds()
+                SearchBranch.using(pointType, province)
+        );
+    }
+
+    @Entonces("debe visualizar {int} sucursales en la provincia {string}")
+    public void validateBranchCount(int expectedCount, String province) {
+        OnStage.theActorInTheSpotlight().attemptsTo(
+                WaitUntil.the(BranchFinder.branchAddressForProvince(province), isVisible())
+                        .forNoMoreThan(15).seconds(),
+                Scroll.to(BranchFinder.branchAddressForProvince(province))
+        );
+
+        OnStage.theActorInTheSpotlight().should(
+                seeThat("la cantidad de sucursales visibles en " + province,
+                        BranchResultsCount.forProvince(province), is(expectedCount))
         );
     }
 

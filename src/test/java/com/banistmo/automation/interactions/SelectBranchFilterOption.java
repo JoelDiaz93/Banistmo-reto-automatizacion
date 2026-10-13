@@ -8,6 +8,7 @@ import net.serenitybdd.screenplay.abilities.BrowseTheWeb;
 import net.serenitybdd.screenplay.Tasks;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -33,7 +34,7 @@ import java.util.Set;
 public class SelectBranchFilterOption implements Interaction {
 
     private static final Duration CONTROL_TIMEOUT = Duration.ofSeconds(8);
-    private static final Duration OPTION_TIMEOUT = Duration.ofSeconds(5);
+    private static final Duration POLL_INTERVAL = Duration.ofMillis(200);
 
     private final Filter filter;
     private final String option;
@@ -57,6 +58,7 @@ public class SelectBranchFilterOption implements Interaction {
         WebDriver driver = BrowseTheWeb.as(actor).getDriver();
 
         WebElement control = new WebDriverWait(driver, CONTROL_TIMEOUT)
+                .pollingEvery(POLL_INTERVAL)
                 .until(currentDriver -> findControl(currentDriver, filter));
 
         scrollToCenter(driver, control);
@@ -157,6 +159,38 @@ public class SelectBranchFilterOption implements Interaction {
     }
 
     private void selectCustomOption(WebDriver driver, WebElement control, String visibleText) {
+        BranchFilterWaitPolicy.Plan waitPlan = BranchFilterWaitPolicy.forFilterName(filter.name());
+
+        openCustomControl(control, visibleText);
+        WebElement optionElement = waitForVisibleOption(driver, visibleText, waitPlan.initialAttempt());
+
+        if (optionElement == null && waitPlan.hasRecoveryAttempt()) {
+            // The province list is populated asynchronously after selecting the
+            // point type. If the first popup was opened before that refresh
+            // completed, close it, resolve the current control again and retry.
+            closeOpenPopup(driver);
+
+            WebElement refreshedControl = new WebDriverWait(driver, CONTROL_TIMEOUT)
+                    .pollingEvery(POLL_INTERVAL)
+                    .until(currentDriver -> findControl(currentDriver, filter));
+
+            scrollToCenter(driver, refreshedControl);
+            openCustomControl(refreshedControl, visibleText);
+            optionElement = waitForVisibleOption(driver, visibleText, waitPlan.recoveryAttempt());
+        }
+
+        if (optionElement == null) {
+            throw new AssertionError(
+                    "No se encontró la opción '" + visibleText + "' para el filtro '" + filter.displayName +
+                    "' dentro del tiempo de sincronización configurado."
+            );
+        }
+
+        scrollToCenter(driver, optionElement);
+        optionElement.click();
+    }
+
+    private void openCustomControl(WebElement control, String visibleText) {
         control.click();
 
         if ("input".equalsIgnoreCase(control.getTagName())) {
@@ -166,12 +200,24 @@ public class SelectBranchFilterOption implements Interaction {
                 control.sendKeys(visibleText);
             }
         }
+    }
 
-        WebElement optionElement = new WebDriverWait(driver, OPTION_TIMEOUT)
-                .until(currentDriver -> firstDisplayed(optionCandidates(currentDriver, visibleText)));
+    private WebElement waitForVisibleOption(WebDriver driver, String visibleText, Duration timeout) {
+        try {
+            return new WebDriverWait(driver, timeout)
+                    .pollingEvery(POLL_INTERVAL)
+                    .until(currentDriver -> firstDisplayed(optionCandidates(currentDriver, visibleText)));
+        } catch (TimeoutException ignored) {
+            return null;
+        }
+    }
 
-        scrollToCenter(driver, optionElement);
-        optionElement.click();
+    private void closeOpenPopup(WebDriver driver) {
+        try {
+            driver.switchTo().activeElement().sendKeys(Keys.ESCAPE);
+        } catch (RuntimeException ignored) {
+            // Best-effort recovery. Re-resolving the filter below is authoritative.
+        }
     }
 
     private List<WebElement> optionCandidates(WebDriver driver, String visibleText) {
